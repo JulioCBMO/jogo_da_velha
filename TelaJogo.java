@@ -29,6 +29,7 @@ public class TelaJogo extends JFrame {
     
     private boolean jogoAtivo = false;
     private int jogadorAtual = 1;
+    private int ultimaJogadaPosicao = -1; 
     
     public TelaJogo() {
         inicializarComponentes();
@@ -209,6 +210,7 @@ public class TelaJogo extends JFrame {
             
             jogoAtivo = true;
             jogadorAtual = 1;
+            ultimaJogadaPosicao = -1; // Resetar última jogada
             
             // Atualizar interface
             limparTabuleiro();
@@ -232,6 +234,7 @@ public class TelaJogo extends JFrame {
         jogoAtivo = false;
         jogo = null;
         jogadorAtual = 1;
+        ultimaJogadaPosicao = -1; // Resetar última jogada
         
         limparTabuleiro();
         
@@ -255,6 +258,7 @@ public class TelaJogo extends JFrame {
         try {
             // Jogada do jogador humano
             jogo.jogaJogador(jogadorAtual, posicao);
+            ultimaJogadaPosicao = posicao; // Atualizar última jogada
             atualizarTabuleiro();
             atualizarInformacoes();
             
@@ -272,7 +276,8 @@ public class TelaJogo extends JFrame {
                 Timer timer = new Timer(500, new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        jogo.jogaMaquina();
+                        int posicaoMaquina = jogo.jogaMaquina();
+                        ultimaJogadaPosicao = posicaoMaquina; // Atualizar última jogada da máquina
                         atualizarTabuleiro();
                         atualizarInformacoes();
                         
@@ -300,15 +305,22 @@ public class TelaJogo extends JFrame {
             String conteudo = jogo.getCelula(i);
             labelsCelulas[i].setText(conteudo.equals(" ") ? " " : conteudo);
             
-            // Colorir células baseado no símbolo
+            // Definir cor de fundo baseado no estado da célula
             if (!conteudo.equals(" ")) {
-                if (conteudo.equals(jogo.getSimbolo(1))) {
+                if (i == ultimaJogadaPosicao) {
+                    // Destacar a última jogada com cor dourada
+                    labelsCelulas[i].setBackground(new Color(255, 215, 0)); // Dourado
+                    labelsCelulas[i].setBorder(BorderFactory.createLineBorder(Color.RED, 3)); // Borda vermelha
+                } else if (conteudo.equals(jogo.getSimbolo(1))) {
                     labelsCelulas[i].setBackground(new Color(173, 216, 230)); // Azul claro
+                    labelsCelulas[i].setBorder(BorderFactory.createLineBorder(Color.BLACK, 2)); // Borda normal
                 } else {
                     labelsCelulas[i].setBackground(new Color(255, 182, 193)); // Rosa claro
+                    labelsCelulas[i].setBorder(BorderFactory.createLineBorder(Color.BLACK, 2)); // Borda normal
                 }
             } else {
                 labelsCelulas[i].setBackground(Color.WHITE);
+                labelsCelulas[i].setBorder(BorderFactory.createLineBorder(Color.BLACK, 2)); // Borda normal
             }
         }
     }
@@ -317,6 +329,7 @@ public class TelaJogo extends JFrame {
         for (JLabel label : labelsCelulas) {
             label.setText(" ");
             label.setBackground(Color.WHITE);
+            label.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2)); // Resetar borda
         }
     }
     
@@ -385,6 +398,9 @@ public class TelaJogo extends JFrame {
                 labelsCelulas[linha].setBackground(Color.GREEN);
                 labelsCelulas[linha + 1].setBackground(Color.GREEN);
                 labelsCelulas[linha + 2].setBackground(Color.GREEN);
+                labelsCelulas[linha].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
+                labelsCelulas[linha + 1].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
+                labelsCelulas[linha + 2].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
                 return;
             }
         }
@@ -398,6 +414,9 @@ public class TelaJogo extends JFrame {
                 labelsCelulas[i].setBackground(Color.GREEN);
                 labelsCelulas[i + 3].setBackground(Color.GREEN);
                 labelsCelulas[i + 6].setBackground(Color.GREEN);
+                labelsCelulas[i].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
+                labelsCelulas[i + 3].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
+                labelsCelulas[i + 6].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
                 return;
             }
         }
@@ -410,6 +429,9 @@ public class TelaJogo extends JFrame {
             labelsCelulas[0].setBackground(Color.GREEN);
             labelsCelulas[4].setBackground(Color.GREEN);
             labelsCelulas[8].setBackground(Color.GREEN);
+            labelsCelulas[0].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
+            labelsCelulas[4].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
+            labelsCelulas[8].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
             return;
         }
         
@@ -420,6 +442,9 @@ public class TelaJogo extends JFrame {
             labelsCelulas[2].setBackground(Color.GREEN);
             labelsCelulas[4].setBackground(Color.GREEN);
             labelsCelulas[6].setBackground(Color.GREEN);
+            labelsCelulas[2].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
+            labelsCelulas[4].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
+            labelsCelulas[6].setBorder(BorderFactory.createLineBorder(Color.DARK_GREEN, 4));
         }
     }
     
@@ -532,8 +557,11 @@ public class TelaJogo extends JFrame {
             int linha = posicao / 3 + 1;
             int coluna = posicao % 3 + 1;
             
-            sb.append(String.format("Jogada %2d: %s colocou '%s' na posição %d (linha %d, coluna %d)\n", 
-                     jogadaNumero, jogador, simbolo, posicao, linha, coluna));
+            // Marcar a última jogada no histórico
+            String marcadorUltima = (posicao == ultimaJogadaPosicao) ? " ← ÚLTIMA JOGADA" : "";
+            
+            sb.append(String.format("Jogada %2d: %s colocou '%s' na posição %d (linha %d, coluna %d)%s\n", 
+                     jogadaNumero, jogador, simbolo, posicao, linha, coluna, marcadorUltima));
             
             jogadaNumero++;
         }
@@ -601,7 +629,14 @@ public class TelaJogo extends JFrame {
                 if (conteudo.equals(" ")) {
                     conteudo = " ";
                 }
-                sb.append(" ").append(conteudo).append(" │");
+                
+                // Marcar a última jogada no tabuleiro formatado
+                if (posicao == ultimaJogadaPosicao) {
+                    sb.append("*").append(conteudo).append("*");
+                } else {
+                    sb.append(" ").append(conteudo).append(" ");
+                }
+                sb.append("│");
             }
             sb.append("\n");
             
@@ -611,6 +646,11 @@ public class TelaJogo extends JFrame {
         }
         
         sb.append(" └───┴───┴───┘\n");
+        
+        if (ultimaJogadaPosicao != -1) {
+            sb.append("\n* = Última jogada realizada\n");
+        }
+        
         return sb.toString();
     }
     
